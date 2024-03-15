@@ -7,6 +7,7 @@ import { BadRequestException } from "../exceptions/bad-request";
 import { ErrorCode } from "../exceptions/root";
 import { UnprocessableEntity } from "../exceptions/validation";
 import { SignUpSchema } from "../schemas/users";
+import { NotFoundException } from "../exceptions/not-found";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
@@ -14,13 +15,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     let user = await prismaClient.user.findFirst({ where: { email } });
 
     if (!user) {
-        next(new BadRequestException("User not found", ErrorCode.USER_NOT_FOUND));
-        throw new BadRequestException("User not found", ErrorCode.USER_NOT_FOUND);
-
+        throw new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND)
     }
 
     if (!compareSync(password, user.password)) {
-        next(new BadRequestException("Incorrect password", ErrorCode.INCORRECT_PASSWORD));
+        throw new BadRequestException("Incorrect password", ErrorCode.INCORRECT_PASSWORD);
     }
 
     const token = jwt.sign({
@@ -32,29 +31,26 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 }
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        SignUpSchema.parse(req.body);
-        const { email, password, name } = req.body;
+    SignUpSchema.parse(req.body);
+    const { email, password, name } = req.body;
 
-        let user = await prismaClient.user.findFirst({ where: { email } });
+    let user = await prismaClient.user.findFirst({ where: { email } });
 
-        if (user) {
-            next(new BadRequestException("User already exists", ErrorCode.USER_ALREADY_EXISTS));
-        }
-
-        user = await prismaClient.user.create({
-            data: {
-                name,
-                email,
-                password: hashSync(password, 10)
-            }
-        });
-
-        res.json(user);
-    } catch (error: any) {
-        next(new UnprocessableEntity(error?.issues, "Unprocessable entity", ErrorCode.UNPROCESSABLE_ENTITY));
-
+    if (user) {
+        throw new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND)
     }
 
+    user = await prismaClient.user.create({
+        data: {
+            name,
+            email,
+            password: hashSync(password, 10)
+        }
+    });
 
+    res.json(user);
+}
+
+export const me = async (req: any, res: Response, next: NextFunction) => {
+    res.json(req.user);
 }

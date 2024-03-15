@@ -1,0 +1,24 @@
+import { NextFunction, Request, Response } from "express";
+import { UnauthorizedException } from "../exceptions/unauthorized";
+import { ErrorCode } from "../exceptions/root";
+
+
+const adminMiddleware = async (req: any, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+
+      if(user.role === "ADMIN"){
+        next()
+      }else{
+        next(new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED))
+
+      }
+
+    } catch (error) {
+        next(new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED))
+
+    }
+
+}
+
+export default adminMiddleware;
