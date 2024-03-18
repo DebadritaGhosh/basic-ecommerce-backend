@@ -45,6 +45,10 @@ Before you begin, make sure you have Node.js installed on your machine. Then, fo
 
 #### Products
 
+#### Cart
+
+#### Admin
+
 
 
 ## Acknowledgments 🙏
