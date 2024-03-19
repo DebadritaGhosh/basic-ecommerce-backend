@@ -79,7 +79,7 @@ export const updateUser = async (req: any, res: Response, next: NextFunction) =>
         } catch (error) {
             throw new NotFoundException("Address not found", ErrorCode.ADDRESS_NOT_FOUND);
         }
-        if(shippingAddress.userId !== req.user.id){
+        if (shippingAddress.userId !== req.user.id) {
             throw new BadRequestException("Address does not belong to user", ErrorCode.ADDRESS_DOES_NOT_BELONG);
         }
     }
@@ -95,7 +95,7 @@ export const updateUser = async (req: any, res: Response, next: NextFunction) =>
         } catch (error) {
             throw new NotFoundException("Address not found", ErrorCode.ADDRESS_NOT_FOUND);
         }
-        if(billingAddress.userId !== req.user.id){
+        if (billingAddress.userId !== req.user.id) {
             throw new BadRequestException("Address does not belong to user", ErrorCode.ADDRESS_DOES_NOT_BELONG);
         }
     }
@@ -111,3 +111,48 @@ export const updateUser = async (req: any, res: Response, next: NextFunction) =>
     res.json(updatedUser);
 }
 
+
+export const listUsers = async (req: any, res: Response, next: NextFunction) => {
+    const users = await prismaClient.user.findMany({
+        skip: req.query.skip || 0,
+        take: 5
+    });
+
+    res.json(users);
+}
+
+
+export const getUserById = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const user = await prismaClient.user.findFirstOrThrow({
+            where: {
+                id: +req.params.id
+            },
+            include: {
+                addresses: true
+            }
+        })
+        res.json(user);
+    } catch (error) {
+        throw new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND);
+
+    }
+}
+
+
+export const changeUserRole = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const user = await prismaClient.user.update({
+            where: {
+                id: +req.params.id
+            },
+            data: {
+                role: req.body.role
+            }
+        })
+        res.json(user);
+    } catch (error) {
+        throw new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND);
+
+    }
+}
